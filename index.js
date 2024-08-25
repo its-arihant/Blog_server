@@ -10,7 +10,7 @@ const authRoute = require('./routes/auth');
 const userRoute = require('./routes/users');
 const postRoute = require('./routes/posts');
 const commentRoute = require('./routes/comments');
-const jwt = require('express-jwt');
+const { expressjwt } = require('express-jwt');
 
 // Database connection
 const connectDB = async () => {
@@ -39,7 +39,10 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 
 // JWT Middleware
-app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
+
+
+app.use(expressjwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
+
 
 // Routes
 app.use("/api/auth", authRoute);
