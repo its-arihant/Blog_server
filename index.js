@@ -10,7 +10,16 @@ const authRoute = require('./routes/auth');
 const userRoute = require('./routes/users');
 const postRoute = require('./routes/posts');
 const commentRoute = require('./routes/comments');
-const { expressjwt } = require('express-jwt');
+const { expressjwt } = require('express-jwt');  // Use destructuring for expressjwt
+
+// Load environment variables
+dotenv.config();
+
+// Check if JWT_SECRET is loaded
+if (!process.env.JWT_SECRET) {
+    console.error("JWT_SECRET is not defined. Please set it in the environment variables.");
+    process.exit(1); // Exit with error code
+}
 
 // Database connection
 const connectDB = async () => {
@@ -23,7 +32,6 @@ const connectDB = async () => {
 };
 
 // Middleware setup
-dotenv.config();
 app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "/images")));
 
@@ -31,18 +39,15 @@ app.use("/images", express.static(path.join(__dirname, "/images")));
 const corsOptions = {
     origin: 'https://blog-client-azure-six.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // if you need to include cookies in requests
+    credentials: true,
     optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
 
-// JWT Middleware
-
-
+// JWT Middleware with a valid secret
 app.use(expressjwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
-
 
 // Routes
 app.use("/api/auth", authRoute);
@@ -57,24 +62,12 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, fn) => {
         fn(null, req.body.img);
-        // fn(null, "image1.jpg");
     }
 });
 
 const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), (req, res) => {
     res.status(200).json("Image has been uploaded successfully!");
-});
-
-// Example Route to Extract Token Manually
-app.get('/api/protected-route', (req, res) => {
-    try {
-        const token = req.headers.authorization.split(' ')[1];
-        // Proceed with the token (e.g., verify it manually if needed)
-        res.status(200).json({ message: 'Token received', token });
-    } catch (err) {
-        res.status(401).json({ message: 'Authorization token missing or invalid' });
-    }
 });
 
 // Start server
