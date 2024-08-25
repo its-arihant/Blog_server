@@ -52,6 +52,10 @@ const storage = multer.diskStorage({
     }
 });
 
+const jwt = require('express-jwt');
+app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
+
+
 const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), (req, res) => {
     res.status(200).json("Image has been uploaded successfully!");
