@@ -10,6 +10,7 @@ const authRoute = require('./routes/auth');
 const userRoute = require('./routes/users');
 const postRoute = require('./routes/posts');
 const commentRoute = require('./routes/comments');
+const jwt = require('express-jwt');
 
 // Database connection
 const connectDB = async () => {
@@ -36,6 +37,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
+
+// JWT Middleware
+app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
+
+// Routes
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/posts", postRoute);
@@ -52,13 +58,20 @@ const storage = multer.diskStorage({
     }
 });
 
-const jwt = require('express-jwt');
-app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }).unless({ path: ['/api/auth'] }));
-
-
 const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), (req, res) => {
     res.status(200).json("Image has been uploaded successfully!");
+});
+
+// Example Route to Extract Token Manually
+app.get('/api/protected-route', (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        // Proceed with the token (e.g., verify it manually if needed)
+        res.status(200).json({ message: 'Token received', token });
+    } catch (err) {
+        res.status(401).json({ message: 'Authorization token missing or invalid' });
+    }
 });
 
 // Start server
